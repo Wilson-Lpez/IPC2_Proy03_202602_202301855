@@ -94,7 +94,7 @@ namespace Backend_API.Logica
                 }
 
                 //el total debe ser el valor mas el iva
-                double totalCalculado = actual.Valor + actual.Iva;
+                double totalCalculado = Math.Round(actual.Valor + actual.Iva, 2);
                 if (actual.Total != totalCalculado)
                 {
                     registro.ErrorTotalMalCalculado = true;

@@ -11,10 +11,10 @@ namespace Backend_API.Models
         [JsonPropertyName("REFERENCIA")]
         public string Referencia {get;set;} //codigo del emisor
 
-        [JsonPropertyName("NIT EMISOR")]
+        [JsonPropertyName("NIT_EMISOR")]
         public string NitEmisor {get; set;} //nit de quien se emite
 
-        [JsonPropertyName("NIT RECEPTOR")]
+        [JsonPropertyName("NIT_RECEPTOR")]
         public string NitReceptor {get;set;} //nit de quien recibe
 
         [JsonPropertyName("VALOR")]

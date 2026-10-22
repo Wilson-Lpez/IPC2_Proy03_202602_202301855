@@ -1,0 +1,44 @@
+@page
+@model EnviarModel
+@{
+    ViewData["Title"] = "Enviar Mensaje";
+}
+
+<h2>Enviar Mensajes JSON</h2>
+<p>Seleccione el archivo que desea cargar para enviarlo a la API.</p>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card p-3 shadow-sm">
+            <h4>1. Actualizar RTU</h4>
+            <form method="post" enctype="multipart/form-data" asp-page-handler="SubirRtu">
+                <div class="form-group mb-3">
+                    <label>Archivo JSON de Contribuyentes:</label>
+                    <input type="file" name="archivoRtu" class="form-control" accept=".json" required />
+                </div>
+                <button type="submit" class="btn btn-primary">Procesar RTU</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card p-3 shadow-sm">
+            <h4>2. Solicitar Autorización</h4>
+            <form method="post" enctype="multipart/form-data" asp-page-handler="SubirFacturas">
+                <div class="form-group mb-3">
+                    <label>Archivo JSON de Facturas:</label>
+                    <input type="file" name="archivoFacturas" class="form-control" accept=".json" required />
+                </div>
+                <button type="submit" class="btn btn-success">Procesar Facturas</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+@if (Model.MensajeResultado != null)
+{
+    <div class="alert alert-dark mt-4">
+        <h5>Respuesta del Servidor:</h5>
+        <pre>@Model.MensajeResultado</pre>
+    </div>
+}

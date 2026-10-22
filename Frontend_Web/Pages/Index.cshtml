@@ -1,10 +1,25 @@
 ﻿@page
 @model IndexModel
 @{
-    ViewData["Title"] = "Home page";
+    ViewData["Title"] = "Inicio";
 }
 
 <div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+    <h1 class="display-4">Proyecto 3 - SAT</h1>
+    
+    <hr />
+    
+    <h3>Opciones del Sistema</h3>
+    <p>Esta opción enviará un mensaje a la API para devolver el sistema al estado inicial, sin datos.</p>
+    
+    <form method="post" asp-page-handler="Inicializar">
+        <button type="submit" class="btn btn-danger btn-lg">Inicializar Sistema (Borrar Todo)</button>
+    </form>
+
+    @if (Model.Mensaje != null)
+    {
+        <div class="alert alert-info mt-3">
+            @Model.Mensaje
+        </div>
+    }
 </div>
