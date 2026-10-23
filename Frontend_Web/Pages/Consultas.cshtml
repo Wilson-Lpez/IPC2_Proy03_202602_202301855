@@ -1,0 +1,202 @@
+@page
+@model ConsultasModel
+@{
+    ViewData["Title"] = "Peticiones y Consultas";
+}
+
+<h2>Consultas y Reportes</h2>
+<hr />
+
+<!--Formulario de reporte por contribuyente-->
+<div class="card mb-4 p-3 shadow-sm">
+    <h4>1. Reporte de Contribuyente</h4>
+    <form method="post" asp-page-handler="ReporteContribuyente">
+        <div class="row">
+            <div class="col-md-3 mb-2">
+                <label>NIT:</label>
+                <input type="text" name="nit" class="form-control" required />
+            </div>
+            <div class="col-md-3 mb-2">
+                <label>Tipo:</label>
+                <select name="tipo" class="form-control">
+                    <option value="emitidas">Emitidas</option>
+                    <option value="recibidas">Recibidas</option>
+                </select>
+            </div>
+            <div class="col-md-3 mb-2">
+                <label>Fecha Inicio (dd/MM/yyyy):</label>
+                <input type="text" name="inicio" class="form-control" placeholder="ej: 01/10/2026" required />
+            </div>
+            <div class="col-md-3 mb-2">
+                <label>Fecha Fin (dd/MM/yyyy):</label>
+                <input type="text" name="fin" class="form-control" placeholder="ej: 22/10/2026" required />
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary mt-2">Generar Reporte</button>
+    </form>
+</div>
+
+<!--si hay un error de conexion, se muestra-->
+@if (Model.MensajeError != null)
+{
+    <div class="alert alert-danger">@Model.MensajeError</div>
+}
+
+<!--si la API devuelve el reporte, se dibuja la tabla-->
+@if (Model.ResultadoReporte != null)
+{
+    <!-- 1. Agregamos el ID aquí -->
+    <div class="alert alert-success" id="area-reporte-contribuyente">
+        <h5>Resultados para NIT: @Model.ResultadoReporte.Nit</h5>
+        <p><strong>Total Facturado en el Rango:</strong> Q @Model.ResultadoReporte.TotalFacturadoRango</p>
+        
+        <table class="table table-bordered bg-white mt-3">
+            <thead class="table-dark">
+                <tr>
+                    <th>Fecha</th>
+                    <th>Cantidad de Facturas</th>
+                    <th>Monto Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!--ciclo para imprimir cada fila devuelta por la api-->
+                @for (int i = 0; i < Model.ResultadoReporte.DetallePorFecha.Count; i++)
+                {
+                    <tr>
+                        <td>@Model.ResultadoReporte.DetallePorFecha[i].Fecha</td>
+                        <td>@Model.ResultadoReporte.DetallePorFecha[i].CantidadFacturas</td>
+                        <td>Q @Model.ResultadoReporte.DetallePorFecha[i].MontoTotal</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- 2. Agregamos el botón de PDF para este primer reporte -->
+    <button class="btn btn-danger mb-4" onclick="descargarPDF('area-reporte-contribuyente', 'Reporte_Contribuyente.pdf')">
+        Descargar PDF de Contribuyente
+    </button>
+}
+
+<!-- Formulario 2: Resumen de IVA -->
+<div class="card mb-4 p-3 shadow-sm">
+    <h4>2. Resumen de IVA por Fecha</h4>
+    <form method="post" asp-page-handler="ResumenIva">
+        <div class="row">
+            <div class="col-md-4 mb-2">
+                <label>Fecha exacta (dd/MM/yyyy):</label>
+                <input type="text" name="fecha" class="form-control" placeholder="ej: 22/10/2026" required />
+            </div>
+        </div>
+        <button type="submit" class="btn btn-success mt-2">Generar Resumen IVA</button>
+    </form>
+</div>
+
+<!-- Formulario 3: Resumen por Rango de Fechas -->
+<div class="card mb-4 p-3 shadow-sm">
+    <h4>3. Resumen por Rango de Fechas</h4>
+    <form method="post" asp-page-handler="ResumenRango">
+        <div class="row">
+            <div class="col-md-4 mb-2">
+                <label>Fecha Inicio (dd/MM/yyyy):</label>
+                <input type="text" name="inicio" class="form-control" placeholder="ej: 01/10/2026" required />
+            </div>
+            <div class="col-md-4 mb-2">
+                <label>Fecha Fin (dd/MM/yyyy):</label>
+                <input type="text" name="fin" class="form-control" placeholder="ej: 22/10/2026" required />
+            </div>
+            <div class="col-md-4 mb-2">
+                <label>Filtro:</label>
+                <select name="conIva" class="form-control">
+                    <option value="true">Con IVA (Total)</option>
+                    <option value="false">Sin IVA (Valor base)</option>
+                </select>
+            </div>
+        </div>
+        <button type="submit" class="btn btn-warning mt-2">Generar Resumen por Rango</button>
+    </form>
+</div>
+
+<!-- TABLA PARA RESUMEN DE IVA, GRÁFICA Y PDF -->
+@if (Model.ListaIva != null)
+{
+    <div class="alert alert-success mt-3" id="area-reporte-iva">
+        <h5>Resumen de IVA</h5>
+        <table class="table table-bordered bg-white mt-2">
+            <thead class="table-success">
+                <tr><th>NIT</th><th>IVA Emitido</th><th>IVA Recibido</th></tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.ListaIva)
+                {
+                    <tr><td>@item.Nit</td><td>Q @item.IvaEmitido</td><td>Q @item.IvaRecibido</td></tr>
+                }
+            </tbody>
+        </table>
+        <!-- Espacio para la Gráfica de IVA -->
+        <div class="mt-4 bg-white p-3 border rounded"><canvas id="graficaIva"></canvas></div>
+    </div>
+    <button class="btn btn-danger mb-5" onclick="descargarPDF('area-reporte-iva', 'Reporte_IVA.pdf')">Descargar PDF de IVA</button>
+}
+
+<!-- TABLA PARA RESUMEN POR RANGO, GRÁFICA Y PDF -->
+@if (Model.ListaRango != null)
+{
+    <div class="alert alert-warning mt-3" id="area-reporte-rango">
+        <h5>Resumen por Rango de Fechas</h5>
+        <table class="table table-bordered bg-white mt-2">
+            <thead class="table-warning">
+                <tr><th>Fecha</th><th>Valor Calculado</th></tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.ListaRango)
+                {
+                    <tr><td>@item.Fecha</td><td>Q @item.Valor.ToString("F2")</td></tr>
+                }
+            </tbody>
+        </table>
+        <!-- Espacio para la Gráfica de Rango -->
+        <div class="mt-4 bg-white p-3 border rounded"><canvas id="graficaRango"></canvas></div>
+    </div>
+    <button class="btn btn-danger mb-5" onclick="descargarPDF('area-reporte-rango', 'Reporte_Rango.pdf')">Descargar PDF de Rango</button>
+}
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script>
+        // Función unificada para descargar cualquier reporte en PDF
+        function descargarPDF(idElemento, nombreArchivo) {
+            var elemento = document.getElementById(idElemento);
+            var opciones = { margin: 0.5, filename: nombreArchivo, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' } };
+            html2pdf().set(opciones).from(elemento).save();
+        }
+
+        // Gráfica para Resumen de Rango
+        @if (Model.ListaRango != null)
+        {
+            <text>
+            var ctxR = document.getElementById('graficaRango').getContext('2d');
+            var etiqR = [], valR = [];
+            @foreach(var item in Model.ListaRango) { <text>etiqR.push('@item.Fecha'); valR.push(@item.Valor);</text> }
+            new Chart(ctxR, { type: 'bar', data: { labels: etiqR, datasets: [{ label: 'Total Facturado (Q)', data: valR, backgroundColor: 'rgba(255, 193, 7, 0.5)', borderColor: 'rgba(255, 193, 7, 1)', borderWidth: 1 }] }});
+            </text>
+        }
+
+        // Gráfica para Resumen de IVA
+        @if (Model.ListaIva != null)
+        {
+            <text>
+            var ctxI = document.getElementById('graficaIva').getContext('2d');
+            var etiqI = [], valEmitido = [], valRecibido = [];
+            @foreach(var item in Model.ListaIva) { <text>etiqI.push('@item.Nit'); valEmitido.push(@item.IvaEmitido); valRecibido.push(@item.IvaRecibido);</text> }
+            new Chart(ctxI, { 
+                type: 'bar', 
+                data: { labels: etiqI, datasets: [
+                    { label: 'IVA Emitido', data: valEmitido, backgroundColor: 'rgba(220, 53, 69, 0.5)', borderColor: 'rgba(220, 53, 69, 1)', borderWidth: 1 },
+                    { label: 'IVA Recibido', data: valRecibido, backgroundColor: 'rgba(25, 135, 84, 0.5)', borderColor: 'rgba(25, 135, 84, 1)', borderWidth: 1 }
+                ]}
+            });
+            </text>
+        }
+    </script>
+}
