@@ -17,7 +17,7 @@ namespace Frontend_Web.Pages
         {
             using (HttpClient cliente = new HttpClient())
             {
-                string urlApi = "http://localhost:5000/ControladorSistema/Inicializar";
+                string urlApi = "http://localhost:5030/ControladorSistema/Inicializar";
                 
                 try
                 {
